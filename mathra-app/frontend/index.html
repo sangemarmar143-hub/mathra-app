@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mathra — Engineering Mathematics Exam Prep</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #1A2332; --ink-soft: #2A3548; --paper: #F7F5F0; --paper-dim: #EDEAE2;
+    --rule: #D8D3C7; --chalk: #4A6FA5; --chalk-soft: #DCE6F2;
+    --amber: #D97B3F; --amber-soft: #F6E4D6; --graphite: #5C6470; --good: #4F7A5C;
+  }
+  *{ box-sizing: border-box; margin:0; padding:0; }
+  body{
+    font-family: 'Inter', sans-serif; background: var(--paper); color: var(--ink);
+    height: 100vh; overflow: hidden;
+    background-image: linear-gradient(var(--rule) 1px, transparent 1px), linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+    background-size: 28px 28px; background-position: -1px -1px;
+  }
+
+  /* ===== Auth screen ===== */
+  .auth-screen{
+    display:flex; align-items:center; justify-content:center; height:100vh;
+  }
+  .auth-card{
+    background: white; border: 1px solid var(--rule); border-radius: 14px;
+    padding: 40px 36px; width: 360px; box-shadow: 0 10px 40px rgba(26,35,50,0.08);
+  }
+  .auth-card .brand{ font-family:'Fraunces', serif; font-size:28px; font-weight:600; margin-bottom: 4px; }
+  .auth-card .brand-sub{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--graphite); letter-spacing:1px; margin-bottom:24px; }
+  .auth-card input{
+    width:100%; padding:11px 14px; border:1px solid var(--rule); border-radius:8px;
+    font-size:14px; margin-bottom:12px; font-family:'Inter',sans-serif;
+  }
+  .auth-card input:focus{ outline:2px solid var(--chalk); outline-offset:1px; }
+  .auth-card button.primary{
+    width:100%; background:var(--ink); color:var(--paper); border:none; padding:12px;
+    border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; margin-top:6px;
+  }
+  .auth-card button.primary:hover{ background:var(--chalk); }
+  .auth-toggle{ text-align:center; font-size:13px; color:var(--graphite); margin-top:16px; }
+  .auth-toggle span{ color:var(--chalk); cursor:pointer; font-weight:600; }
+  .auth-error{ color:var(--amber); font-size:12.5px; margin-bottom:10px; min-height:0; }
+
+  /* ===== App layout ===== */
+  .app{ display: grid; grid-template-columns: 280px 1fr; height: 100vh; }
+  .sidebar{ background: var(--ink); color: var(--paper); padding: 28px 22px; display:flex; flex-direction:column; overflow-y:auto; }
+  .brand{ font-family:'Fraunces', serif; font-size:26px; font-weight:600; letter-spacing:-0.5px; margin-bottom:4px; }
+  .brand-sub{ font-size:12px; color:#97A4BD; margin-bottom:28px; font-family:'IBM Plex Mono', monospace; letter-spacing:0.5px; }
+  .syllabus-label{ font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:#6B7A99; margin-bottom:14px; font-weight:600; }
+  .topic{ display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:6px; cursor:pointer; font-size:14px; color:#C7CEDC; transition: background 0.15s, color 0.15s; line-height:1.3; }
+  .topic:hover{ background: rgba(255,255,255,0.06); color: var(--paper); }
+  .topic.active{ background: var(--chalk); color: white; }
+  .topic-mark{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:#6B7A99; min-width:22px; }
+  .topic.active .topic-mark{ color: rgba(255,255,255,0.7); }
+
+  .sidebar-footer{ margin-top:auto; padding-top:20px; border-top:1px solid rgba(255,255,255,0.08); font-size:12px; color:#6B7A99; line-height:1.6; }
+  .sidebar-footer b{ color:#C7CEDC; }
+  .plan-badge{
+    display:inline-block; font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:1px;
+    padding: 3px 8px; border-radius: 4px; margin-top:6px; text-transform:uppercase;
+  }
+  .plan-badge.free{ background: rgba(217,123,63,0.18); color: var(--amber); }
+  .plan-badge.pro{ background: rgba(79,122,92,0.2); color: var(--good); }
+  .upgrade-link{ display:block; margin-top:10px; color: var(--chalk); cursor:pointer; font-weight:600; font-size:12px; }
+  .logout-link{ display:block; margin-top:6px; color:#6B7A99; cursor:pointer; font-size:12px; }
+
+  .main{ display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+  .topbar{ padding:22px 36px; border-bottom:1px solid var(--rule); background: rgba(247,245,240,0.85); backdrop-filter: blur(6px); display:flex; justify-content:space-between; align-items:flex-start; }
+  .topbar h1{ font-family:'Fraunces', serif; font-size:22px; font-weight:600; margin-bottom:4px; }
+  .topbar p{ font-size:13px; color:var(--graphite); }
+  .usage-pill{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--graphite);
+    background: var(--paper-dim); border:1px solid var(--rule); border-radius:20px; padding:6px 14px; white-space:nowrap;
+  }
+  .usage-pill.pro{ color: var(--good); border-color: rgba(79,122,92,0.3); background: rgba(79,122,92,0.08); }
+
+  .content{ flex:1; display:grid; grid-template-columns: 1fr 320px; overflow:hidden; }
+  .chat-col{ display:flex; flex-direction:column; overflow:hidden; border-right:1px solid var(--rule); }
+  .messages{ flex:1; overflow-y:auto; padding:28px 36px; display:flex; flex-direction:column; gap:20px; }
+  .msg{ max-width:80%; line-height:1.6; font-size:14.5px; }
+  .msg.user{ align-self:flex-end; background:var(--chalk); color:white; padding:12px 16px; border-radius:12px 12px 2px 12px; }
+  .msg.assistant{ align-self:flex-start; background:white; border:1px solid var(--rule); padding:16px 18px; border-radius:2px 12px 12px 12px; }
+  .msg.assistant.loading{ color:var(--graphite); font-family:'IBM Plex Mono', monospace; font-size:13px; }
+  .msg.assistant.paywall{ border-color: var(--amber); background: var(--amber-soft); }
+
+  .step{ border-left:3px solid var(--chalk); padding:4px 0 4px 14px; margin:10px 0; }
+  .step-num{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--chalk); font-weight:600; letter-spacing:1px; text-transform:uppercase; }
+  .mistake{ border-left:3px solid var(--amber); background:var(--amber-soft); padding:10px 14px; margin:10px 0; border-radius:0 8px 8px 0; font-size:13.5px; }
+  .mistake-label{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--amber); font-weight:700; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:4px; }
+  .msg pre{ background:var(--ink); color:#DCE6F2; padding:12px 14px; border-radius:8px; font-family:'IBM Plex Mono', monospace; font-size:13px; overflow-x:auto; margin:10px 0; line-height:1.7; }
+  .msg code{ font-family:'IBM Plex Mono', monospace; background:var(--paper-dim); padding:1px 5px; border-radius:4px; font-size:13px; }
+
+  .input-bar{ border-top:1px solid var(--rule); padding:18px 36px 24px; background:var(--paper); }
+  .input-row{ display:flex; gap:10px; }
+  .input-row textarea{ flex:1; resize:none; border:1px solid var(--rule); border-radius:10px; padding:12px 14px; font-family:'Inter', sans-serif; font-size:14px; background:white; height:48px; line-height:1.4; color:var(--ink); }
+  .input-row textarea:focus{ outline:2px solid var(--chalk); outline-offset:1px; }
+  .send-btn{ background:var(--ink); color:var(--paper); border:none; border-radius:10px; padding:0 22px; font-family:'Inter', sans-serif; font-weight:600; font-size:14px; cursor:pointer; transition: background 0.15s; }
+  .send-btn:hover{ background:var(--chalk); }
+  .send-btn:disabled{ opacity:0.5; cursor:not-allowed; }
+
+  .quick-row{ display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+  .quick-chip{ font-size:12px; font-family:'IBM Plex Mono', monospace; background:var(--paper-dim); border:1px solid var(--rule); padding:6px 12px; border-radius:20px; cursor:pointer; color:var(--graphite); transition:all 0.15s; }
+  .quick-chip:hover{ border-color:var(--chalk); color:var(--chalk); }
+
+  .practice-col{ padding:26px 24px; overflow-y:auto; background:var(--paper-dim); }
+  .practice-label{ font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--graphite); font-weight:700; margin-bottom:14px; }
+  .practice-card{ background:white; border:1px solid var(--rule); border-radius:10px; padding:16px; margin-bottom:14px; }
+  .practice-q{ font-size:13.5px; line-height:1.55; margin-bottom:10px; }
+  .practice-meta{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--chalk); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px; }
+  .practice-btn{ font-size:12px; background:var(--chalk-soft); color:var(--chalk); border:none; padding:7px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-family:'Inter', sans-serif; }
+  .practice-btn:hover{ background:var(--chalk); color:white; }
+
+  .gen-btn{ width:100%; background:var(--ink); color:var(--paper); border:none; padding:12px; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer; margin-bottom:18px; transition: background 0.15s; }
+  .gen-btn:hover{ background:var(--chalk); }
+  .gen-btn:disabled{ opacity:0.5; }
+
+  .upgrade-card{
+    background: var(--ink); color: var(--paper); border-radius:10px; padding:18px;
+    margin-bottom: 18px; font-size: 13px; line-height: 1.6;
+  }
+  .upgrade-card b{ font-family:'Fraunces', serif; font-size:16px; display:block; margin-bottom:6px; }
+  .upgrade-card button{
+    width:100%; background: var(--chalk); color:white; border:none; padding:10px; border-radius:8px;
+    font-weight:600; margin-top:10px; cursor:pointer; font-family:'Inter',sans-serif; font-size:13px;
+  }
+
+  ::-webkit-scrollbar{ width:8px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:var(--rule); border-radius:4px; }
+
+  .hidden{ display:none !important; }
+
+  @media (max-width: 900px){
+    .app{ grid-template-columns: 1fr; } .sidebar{ display:none; } .content{ grid-template-columns: 1fr; } .practice-col{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== AUTH SCREEN ===== -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <div class="brand">Mathra</div>
+    <div class="brand-sub">ENGINEERING MATHEMATICS · EXAM PREP</div>
+    <div class="auth-error" id="authError"></div>
+    <input type="email" id="authEmail" placeholder="Email" />
+    <input type="password" id="authPassword" placeholder="Password (6+ characters)" />
+    <button class="primary" id="authSubmit">Log in</button>
+    <div class="auth-toggle">
+      <span id="authToggleText">New here? <span id="authToggleLink">Create an account</span></span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div class="app hidden" id="appRoot">
+  <aside class="sidebar">
+    <div class="brand">Mathra</div>
+    <div class="brand-sub">ENGINEERING MATHEMATICS · EXAM PREP</div>
+    <div class="syllabus-label">Syllabus</div>
+    <div id="topicList"></div>
+    <div class="sidebar-footer">
+      Currently studying:<br/>
+      <b id="footerTopic">Linear Algebra</b><br/>
+      <span class="plan-badge" id="planBadge">free</span>
+      <span class="upgrade-link" id="upgradeLink">Upgrade to Pro →</span>
+      <span class="logout-link" id="logoutLink">Log out</span>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 id="topicTitle">Linear Algebra</h1>
+        <p id="topicDesc">Matrices, rank, eigenvalues & eigenvectors, diagonalization, vector spaces.</p>
+      </div>
+      <div class="usage-pill" id="usagePill">5 questions left today</div>
+    </div>
+
+    <div class="content">
+      <div class="chat-col">
+        <div class="messages" id="messages"></div>
+        <div class="input-bar">
+          <div class="quick-row">
+            <div class="quick-chip" data-q="Explain this topic from scratch with a simple example.">Explain from scratch</div>
+            <div class="quick-chip" data-q="Solve a step-by-step example problem on this topic.">Worked example</div>
+            <div class="quick-chip" data-q="What are the most common mistakes students make on this topic in exams?">Common mistakes</div>
+            <div class="quick-chip" data-q="Give me the key formulas I should memorize for this topic.">Formula sheet</div>
+          </div>
+          <div class="input-row">
+            <textarea id="userInput" placeholder="Ask a doubt, paste a problem, or request an explanation..."></textarea>
+            <button class="send-btn" id="sendBtn">Ask</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="practice-col">
+        <div class="practice-label">Practice Questions</div>
+        <button class="gen-btn" id="genBtn">Generate new question</button>
+        <div id="practiceList"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ===========================================================================
+// CONFIG — point this to your deployed backend
+// ===========================================================================
+const API_BASE = 'http://localhost:4000'; // change to your deployed backend URL
+
+const TOPICS = [
+  { id: 'linalg', name: 'Linear Algebra', desc: 'Matrices, rank, eigenvalues & eigenvectors, diagonalization, vector spaces.' },
+  { id: 'diffcalc', name: 'Differential Calculus', desc: 'Limits, partial derivatives, maxima/minima, Taylor series.' },
+  { id: 'intcalc', name: 'Integral Calculus', desc: 'Multiple integrals, change of order, applications to area/volume.' },
+  { id: 'ode', name: 'Differential Equations', desc: 'First & higher order ODEs, Laplace transforms, applications.' },
+  { id: 'veccalc', name: 'Vector Calculus', desc: "Gradient, divergence, curl, Green's/Stokes'/Gauss' theorems." },
+  { id: 'complex', name: 'Complex Analysis', desc: 'Analytic functions, Cauchy-Riemann equations, contour integration.' },
+  { id: 'probstat', name: 'Probability & Statistics', desc: 'Distributions, expectation, hypothesis testing, correlation.' },
+  { id: 'numerical', name: 'Numerical Methods', desc: 'Root finding, interpolation, numerical integration & ODE solvers.' },
+];
+
+let currentTopic = TOPICS[0];
+let conversation = [];
+let authMode = 'login'; // or 'signup'
+let userPlan = 'free';
+let token = localStorage.getItem('mathra_token');
+
+// ---------------------------------------------------------------------------
+// AUTH UI
+// ---------------------------------------------------------------------------
+const authScreen = document.getElementById('authScreen');
+const appRoot = document.getElementById('appRoot');
+const authEmail = document.getElementById('authEmail');
+const authPassword = document.getElementById('authPassword');
+const authSubmit = document.getElementById('authSubmit');
+const authError = document.getElementById('authError');
+const authToggleLink = document.getElementById('authToggleLink');
+const authToggleText = document.getElementById('authToggleText');
+
+authToggleLink.onclick = () => {
+  authMode = authMode === 'login' ? 'signup' : 'login';
+  authSubmit.textContent = authMode === 'login' ? 'Log in' : 'Create account';
+  authToggleText.innerHTML = authMode === 'login'
+    ? `New here? <span id="authToggleLink">Create an account</span>`
+    : `Already have an account? <span id="authToggleLink">Log in</span>`;
+  document.getElementById('authToggleLink').onclick = authToggleLink.onclick;
+  authError.textContent = '';
+};
+
+authSubmit.onclick = async () => {
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
+  authError.textContent = '';
+  if (!email || !password) { authError.textContent = 'Enter email and password.'; return; }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/${authMode === 'login' ? 'login' : 'signup'}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) { authError.textContent = data.error || 'Something went wrong.'; return; }
+
+    token = data.token;
+    localStorage.setItem('mathra_token', token);
+    userPlan = data.user.plan;
+    showApp();
+  } catch (e) {
+    authError.textContent = 'Could not reach server. Check API_BASE / backend is running.';
+  }
+};
+
+async function showApp(){
+  authScreen.classList.add('hidden');
+  appRoot.classList.remove('hidden');
+  await refreshUserInfo();
+  renderTopics();
+  selectTopic(currentTopic, true);
+}
+
+async function refreshUserInfo(){
+  try {
+    const res = await fetch(`${API_BASE}/api/me`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) { logout(); return; }
+    const data = await res.json();
+    userPlan = data.user.plan;
+    document.getElementById('planBadge').textContent = userPlan;
+    document.getElementById('planBadge').className = 'plan-badge ' + userPlan;
+    document.getElementById('upgradeLink').classList.toggle('hidden', userPlan === 'pro');
+    updateUsagePill(null);
+  } catch (e) { /* ignore */ }
+}
+
+function logout(){
+  localStorage.removeItem('mathra_token');
+  token = null;
+  appRoot.classList.add('hidden');
+  authScreen.classList.remove('hidden');
+}
+document.getElementById('logoutLink').onclick = logout;
+
+document.getElementById('upgradeLink').onclick = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/stripe/create-checkout-session`, {
+      method: 'POST', headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (data.url) window.location.href = data.url;
+  } catch (e) { alert('Could not start checkout. Backend/Stripe not configured yet.'); }
+};
+
+// ---------------------------------------------------------------------------
+// TOPICS & SIDEBAR
+// ---------------------------------------------------------------------------
+const topicList = document.getElementById('topicList');
+const messagesEl = document.getElementById('messages');
+const userInput = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+const genBtn = document.getElementById('genBtn');
+const practiceList = document.getElementById('practiceList');
+const topicTitle = document.getElementById('topicTitle');
+const topicDesc = document.getElementById('topicDesc');
+const footerTopic = document.getElementById('footerTopic');
+
+function renderTopics(){
+  topicList.innerHTML = '';
+  TOPICS.forEach((t, i) => {
+    const div = document.createElement('div');
+    div.className = 'topic' + (t.id === currentTopic.id ? ' active' : '');
+    div.innerHTML = `<span class="topic-mark">${String(i+1).padStart(2,'0')}</span><span>${t.name}</span>`;
+    div.onclick = () => selectTopic(t);
+    topicList.appendChild(div);
+  });
+}
+
+function selectTopic(t, isInit){
+  currentTopic = t;
+  topicTitle.textContent = t.name;
+  topicDesc.textContent = t.desc;
+  footerTopic.textContent = t.name;
+  conversation = [];
+  messagesEl.innerHTML = '';
+  practiceList.innerHTML = '';
+  renderTopics();
+  addAssistantMessage(`You're now in **${t.name}**. ${t.desc}\n\nAsk a doubt, request a worked example, or generate a practice question on the right.`);
+}
+
+// ---------------------------------------------------------------------------
+// RENDERING
+// ---------------------------------------------------------------------------
+function renderContent(text){
+  let safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  safe = safe.replace(/```([\s\S]*?)```/g, (m, code) => `<pre>${code.trim()}</pre>`);
+  safe = safe.replace(/\[STEP\s*(\d+)\s*:\s*(.*?)\]/g, (m, n, title) =>
+    `</p><div class="step"><span class="step-num">Step ${n} — ${title}</span><br>`);
+  safe = safe.replace(/\[MISTAKE\s*:\s*(.*?)\]/g, (m, label) =>
+    `</div></p><div class="mistake"><span class="mistake-label">⚠ ${label}</span>`);
+
+  let parts = safe.split(/(<div class="step">.*?<\/span><br>|<\/div><\/p><div class="mistake">.*?<\/span>)/gs);
+  let html = '<p>'; let openDivs = 0;
+  parts.forEach(part => {
+    if (!part) return;
+    if (part.startsWith('<div class="step">')) { html += '</p>' + part; openDivs++; }
+    else if (part.startsWith('</div></p><div class="mistake">')) {
+      if (openDivs > 0) { html += part; } else { html += '</p><div class="mistake">' + part.split('class="mistake">')[1]; openDivs++; }
+    } else {
+      let t = part.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+      html += t;
+    }
+  });
+  while(openDivs > 0){ html += '</div>'; openDivs--; }
+  html += '</p>';
+  return html;
+}
+
+function addUserMessage(text){
+  const div = document.createElement('div');
+  div.className = 'msg user';
+  div.textContent = text;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function addAssistantMessage(text, paywall){
+  const div = document.createElement('div');
+  div.className = 'msg assistant' + (paywall ? ' paywall' : '');
+  div.innerHTML = renderContent(text);
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return div;
+}
+
+function addLoading(){
+  const div = document.createElement('div');
+  div.className = 'msg assistant loading';
+  div.textContent = 'Mathra is working through it...';
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return div;
+}
+
+function updateUsagePill(remaining){
+  const pill = document.getElementById('usagePill');
+  if (userPlan === 'pro') {
+    pill.textContent = 'Pro — unlimited';
+    pill.className = 'usage-pill pro';
+  } else if (remaining !== null) {
+    pill.textContent = `${remaining} question${remaining === 1 ? '' : 's'} left today`;
+    pill.className = 'usage-pill';
+  } else {
+    pill.textContent = 'Free plan';
+    pill.className = 'usage-pill';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// CHAT
+// ---------------------------------------------------------------------------
+async function sendMessage(){
+  const text = userInput.value.trim();
+  if (!text) return;
+  userInput.value = '';
+  sendBtn.disabled = true;
+
+  addUserMessage(text);
+  conversation.push({ role: 'user', content: text });
+
+  const loadingEl = addLoading();
+  try {
+    const res = await fetch(`${API_BASE}/api/tutor/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ messages: conversation, topic: currentTopic.name }),
+    });
+    const data = await res.json();
+    loadingEl.remove();
+
+    if (res.status === 402) {
+      addAssistantMessage("You've used today's free questions. Upgrade to Mathra Pro for unlimited tutoring and practice questions.", true);
+      conversation.pop();
+      updateUsagePill(0);
+      return;
+    }
+    if (!res.ok) { addAssistantMessage('Something went wrong. Please try again.'); conversation.pop(); return; }
+
+    addAssistantMessage(data.reply);
+    conversation.push({ role: 'assistant', content: data.reply });
+    updateUsagePill(data.remaining);
+  } catch (e) {
+    loadingEl.remove();
+    addAssistantMessage("Couldn't reach the tutor server. Check that the backend is running.");
+    conversation.pop();
+    console.error(e);
+  }
+  sendBtn.disabled = false;
+}
+
+sendBtn.onclick = sendMessage;
+userInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+document.querySelectorAll('.quick-chip').forEach(chip => {
+  chip.onclick = () => { userInput.value = chip.dataset.q; sendMessage(); };
+});
+
+// ---------------------------------------------------------------------------
+// PRACTICE QUESTIONS
+// ---------------------------------------------------------------------------
+async function generatePractice(){
+  genBtn.disabled = true;
+  genBtn.textContent = 'Generating...';
+  try {
+    const res = await fetch(`${API_BASE}/api/tutor/practice`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ topic: currentTopic.name }),
+    });
+    const data = await res.json();
+
+    if (res.status === 402) {
+      addUpgradeCard();
+    } else if (res.ok) {
+      addPracticeCard(data.question);
+      updateUsagePill(data.remaining);
+    }
+  } catch (e) { console.error(e); }
+  genBtn.disabled = false;
+  genBtn.textContent = 'Generate new question';
+}
+
+function addPracticeCard(q){
+  const card = document.createElement('div');
+  card.className = 'practice-card';
+  card.innerHTML = `
+    <div class="practice-meta">${q.difficulty}</div>
+    <div class="practice-q">${q.question.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+    <button class="practice-btn">Solve with Mathra</button>
+  `;
+  card.querySelector('.practice-btn').onclick = () => {
+    userInput.value = `Solve this step by step: ${q.question}`;
+    sendMessage();
+  };
+  practiceList.prepend(card);
+}
+
+function addUpgradeCard(){
+  const card = document.createElement('div');
+  card.className = 'upgrade-card';
+  card.innerHTML = `<b>Daily limit reached</b>Upgrade to Mathra Pro for unlimited practice questions and tutor chats.<button>Upgrade to Pro</button>`;
+  card.querySelector('button').onclick = document.getElementById('upgradeLink').onclick;
+  practiceList.prepend(card);
+}
+
+genBtn.onclick = generatePractice;
+
+// ---------------------------------------------------------------------------
+// INIT
+// ---------------------------------------------------------------------------
+if (token) { showApp(); }
+</script>
+</body>
+</html>
